@@ -11,36 +11,28 @@ library(ggplot2)
 library(plotly)
 library(shiny)
 library(tidyverse)
+library(shinydashboard)
+library(leaflet)
+library(RColorBrewer)
 
-ui <- fluidPage(
-  titlePanel("COVID-19 in NYC"),
-  
-  # --------- Timeline Slider --------- #
-  fluidRow(
-    column(12, sliderInput("time", "Year:",
-                          min = time_min, max = time_max, value = time_min, step=1)
-    )
-  ),
-  
-  sidebarLayout(
-  # --------- Checkbox --------- #
-  sidebarPanel(
-    checkboxGroupInput("vars", "Choose:",
+ui <- dashboardPage(
+  dashboardHeader(title = "NYC Covid-19"),
+  dashboardSidebar(
+    checkboxGroupInput("vars", "Filter visualization:",
                        c("Cylinders" = "cyl",
                          "Transmission" = "am",
-                         "Gears" = "gear")),
-    width = 2
+                         "Gears" = "gear"))
   ),
-  
-  # --------- NYC map --------- #
-  mainPanel(
+  dashboardBody(
+    # Boxes need to be put in a row (or column)
+    sliderInput("time", "Year:",
+                             min = 2017, max = 2018, value = 2017, step=1),
+    
     plotlyOutput("nyc_map", height = "100%", width = "90%")
-  ), 
-  
-  position = "right",
-  fluid = TRUE)
-  
-);
+  )
+)
+
+
 
 
 
