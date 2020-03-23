@@ -1,0 +1,10 @@
+Package: NYC_covid19
+Imports:
+    tidyverse,
+    sf,
+    shiny,
+    shinyWidgets,
+    leaflet,
+    shinydashboard,
+    dashboardthemes,
+    rsconnect
