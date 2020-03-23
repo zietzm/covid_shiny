@@ -4,9 +4,9 @@ library(shiny)
 library(leaflet)
 library(shinydashboard)
 
-tract_shapes <- read_sf('../NYC_covid19/shapefiles/nyc_census_tracts.shp')
+tract_shapes <- read_sf('shapefiles/nyc_census_tracts.shp')
 
-combined_tract_df <- read_tsv('../NYC_covid19/data/census/combined_tract_population_2017_2018.tsv',
+combined_tract_df <- read_tsv('data/census/combined_tract_population_2017_2018.tsv',
                               col_types = cols(GEOID = col_character(), estimate = col_double(),
                                                year = col_double(), popup = col_character()))
 
