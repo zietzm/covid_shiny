@@ -1,54 +1,65 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
-library(ggplot2)
-library(plotly)
-library(shiny)
 library(tidyverse)
-library(shinydashboard)
+library(sf)
+library(shiny)
 library(leaflet)
-library(RColorBrewer)
+library(shinydashboard)
+
+tract_shapes <- read_sf('shapefiles/nyc_census_tracts.shp')
+
+combined_tract_df <- read_tsv('data/census/combined_tract_population_2017_2018.tsv',
+                              col_types = cols(GEOID = col_character(), estimate = col_double(),
+                                               year = col_double(), popup = col_character()))
+
+plot_df <- tract_shapes %>%
+    inner_join(combined_tract_df, by = 'GEOID')
+
+
+pal <- colorNumeric(palette = "viridis", domain = plot_df$estimate, n = 10)
 
 ui <- dashboardPage(
-  dashboardHeader(title = "NYC Covid-19"),
-  dashboardSidebar(
-    checkboxGroupInput("vars", "Filter visualization:",
-                       c("Cylinders" = "cyl",
-                         "Transmission" = "am",
-                         "Gears" = "gear"))
-  ),
-  dashboardBody(
-    # Boxes need to be put in a row (or column)
-    sliderInput("time", "Year:",
-                             min = 2017, max = 2018, value = 2017, step=1),
-    
-    plotlyOutput("nyc_map", height = "100%", width = "90%")
+    dashboardHeader(title = "DBMI COVID-19"),
+    dashboardSidebar(),  # Not sure what we might want here
+    dashboardBody(
+        fluidRow(
+            box(width = 8,
+                title = "Date",
+                sliderInput("date_slider",
+                            NULL,
+                            min = as.Date("2017-01-01"),
+                            max = as.Date("2018-01-01"),
+                            value = as.Date("2017-01-01"),
+                            timeFormat="%Y",
+                            step = 365)
+            ),
+            column(4, selectInput('sex', 'Sex', c('male', 'female', 'total')))
+        ),
+        fluidRow(
+          box(
+              width = 8,
+              leafletOutput("nycmap", height = 600),
+          ),
+        )
   )
 )
 
 
-
-
-
-# Define server logic required to draw a histogram
 server <- function(input, output) {
-  # --------- VARIABLES --------- #
-  time_min <- 2017
-  time_max <- 2018
-  
-  # --------- NYC HEATMAP --------- #
-  output$nyc_map <- renderPlotly({
-    ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) + geom_point()
+  output$nycmap <- renderLeaflet({
+    plot_df %>%
+      filter(year == as.numeric(format(input$date_slider,'%Y')) & sex == input$sex) %>%
+      leaflet(height = "100%") %>%
+      addProviderTiles(provider = "CartoDB.Positron") %>%
+      addPolygons(popup = ~ popup,
+                  stroke = FALSE,
+                  smoothFactor = 0,
+                  fillOpacity = 0.4,
+                  color = ~ pal(estimate)) %>%
+      addLegend("bottomright",
+                pal = pal,
+                values = ~ estimate,
+                title = "Population",
+                opacity = 1)
   })
-  
 }
 
-# Run the application 
-shinyApp(ui = ui, server = server)
-
+shinyApp(ui, server)
