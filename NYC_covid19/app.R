@@ -1,62 +1,70 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
-library(ggplot2)
-library(plotly)
-library(shiny)
 library(tidyverse)
+library(sf)
+library(shiny)
+library(leaflet)
+library(shinydashboard)
 
-ui <- fluidPage(
-  titlePanel("COVID-19 in NYC"),
-  
-  # --------- Timeline Slider --------- #
-  fluidRow(
-    column(12, sliderInput("time", "Year:",
-                          min = time_min, max = time_max, value = time_min, step=1)
-    )
-  ),
-  
-  sidebarLayout(
-  # --------- Checkbox --------- #
-  sidebarPanel(
-    checkboxGroupInput("vars", "Choose:",
-                       c("Cylinders" = "cyl",
-                         "Transmission" = "am",
-                         "Gears" = "gear")),
-    width = 2
-  ),
-  
-  # --------- NYC map --------- #
-  mainPanel(
-    plotlyOutput("nyc_map", height = "100%", width = "90%")
-  ), 
-  
-  position = "right",
-  fluid = TRUE)
-  
-);
+tract_shapes <- read_sf('shapefiles/nyc_census_tracts.shp')
+
+combined_tract_df <- read_tsv('data/census/combined_tract_population_2017_2018.tsv',
+                              col_types = cols(GEOID = col_character(), estimate = col_double(),
+                                               year = col_double(), popup = col_character()))
+
+plot_df <- tract_shapes %>%
+    inner_join(combined_tract_df, by = 'GEOID')
 
 
+# Color palette range is wrong. Uses complete range even though only groups are
+#  shown at one time.
+pal <- colorNumeric(palette = "viridis", domain = plot_df$estimate, n = 10)
 
-# Define server logic required to draw a histogram
+
+ui <- dashboardPage(
+    dashboardHeader(title = "DBMI COVID-19"),
+    dashboardSidebar(),  # Not sure what we might want in the left pane
+    dashboardBody(
+        fluidRow(
+            box(
+                title = "Date",
+                sliderInput("date_slider",
+                            NULL,
+                            min = as.Date("2017-01-01"),
+                            max = as.Date("2018-01-01"),
+                            value = as.Date("2017-01-01"),
+                            timeFormat="%Y")
+            ),
+            column(4,
+              selectInput('sex', 'Sex', c('male', 'female', 'total'))
+              # This would be the place for other data filters like race, comorbidities, etc.
+            )
+        ),
+        fluidRow(
+          box(
+              width = 6,
+              leafletOutput("nycmap"),
+          ),
+        )
+  )
+)
+
+
 server <- function(input, output) {
-  # --------- VARIABLES --------- #
-  time_min <- 2017
-  time_max <- 2018
-  
-  # --------- NYC HEATMAP --------- #
-  output$nyc_map <- renderPlotly({
-    ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) + geom_point()
+  output$nycmap <- renderLeaflet({
+    plot_df %>%
+      filter(year == as.numeric(format(input$date_slider,'%Y')) & sex == input$sex) %>%
+      leaflet(height = "100%") %>%
+      addProviderTiles(provider = "CartoDB.Positron") %>%
+      addPolygons(popup = ~ popup,
+                  stroke = FALSE,
+                  smoothFactor = 0,
+                  fillOpacity = 0.7,
+                  color = ~ pal(estimate)) %>%
+      addLegend("bottomright",
+                pal = pal,
+                values = ~ estimate,
+                title = "Population",
+                opacity = 1)
   })
-  
 }
 
-# Run the application 
-shinyApp(ui = ui, server = server)
-
+shinyApp(ui, server)
