@@ -1,0 +1,23 @@
+dist: xenial
+sudo: false
+latex: false
+language: r
+r: release
+cache:
+  packages: true
+apt_packages:
+  - libgdal-dev
+  - libudunits2-dev
+git:
+  depth: false
+r_packages:
+  - dashboardthemes
+  - leaflet
+  - maps
+  - sf
+  - shiny
+  - shinydashboard
+  - shinyWidgets
+  - tidyverse
+script:
+  - R -f ci/deploy.R

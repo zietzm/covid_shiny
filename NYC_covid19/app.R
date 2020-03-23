@@ -12,7 +12,7 @@ library(dashboardthemes)
 
 # nyc shape files
 plot_df <- inner_join(
-  # nyc census data
+  # nyc census tract shapefile
   read_sf('shapefiles/nyc_census_tracts.shp'),
   # nyc census data
   read_tsv('data/census/combined_tract_population_2017_2018.tsv',
@@ -45,8 +45,8 @@ ui <- dashboardPage(skin = "black",
                     value = as.Date("2017-01-01"),
                     timeFormat="%Y",
                     step = 365),
-        selectInput('sex', 
-                    'Sex', 
+        selectInput('sex',
+                    'Sex',
                     c('male', 'female', 'total')))),
     dashboardBody(shinyDashboardThemes(theme = "grey_dark"),
         fluidRow(
