@@ -1,6 +1,8 @@
 dist: xenial
 sudo: false
 latex: false
+git:
+  depth: false
 language: r
 r: release
 cache:
@@ -8,8 +10,6 @@ cache:
 apt_packages:
   - libgdal-dev
   - libudunits2-dev
-git:
-  depth: false
 r_packages:
   - dashboardthemes
   - leaflet
@@ -20,4 +20,4 @@ r_packages:
   - shinyWidgets
   - tidyverse
 script:
-  - R -f ci/deploy.R
+  - Rscript ci/deploy.R $shinyapps_secret

@@ -13,6 +13,7 @@ dependencies:
   - conda-forge::r-leaflet=2.0.3
   - conda-forge::r-shiny=1.4.0.2
   - conda-forge::r-shinydashboard=0.7.1
+  - conda-forge::r-shinywidgets=0.5.1
   - conda-forge::r-units=0.6_6
   - conda-forge::r-rgdal
   - conda-forge::r-sf

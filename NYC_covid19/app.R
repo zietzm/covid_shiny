@@ -16,8 +16,8 @@ plot_df <- inner_join(
   read_sf('shapefiles/nyc_census_tracts.shp'),
   # nyc census data
   read_tsv('data/census/combined_tract_population_2017_2018.tsv',
-                      col_types = cols(GEOID = col_character(), estimate = col_double(),
-                                       year = col_double(), popup = col_character())),
+           col_types = cols(GEOID = col_character(), estimate = col_double(),
+                            year = col_double(), popup = col_character())),
   # join on GEOID
   by = 'GEOID')
 
